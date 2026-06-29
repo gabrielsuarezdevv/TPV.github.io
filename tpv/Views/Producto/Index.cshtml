@@ -1,0 +1,874 @@
+@model IEnumerable<tpv.Models.Producto>
+
+@{
+    ViewData["Title"] = "TPV";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TPV</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1" rel="stylesheet" />
+    <style>
+        :root {
+            --bg:           #f6f4f1;
+            --surface:      #ffffff;
+            --surface-alt:  #edeae5;
+            --border:       #d8d3cc;
+            --primary:      #8d000a;
+            --primary-dark: #6a0007;
+            --secondary:    #0060ac;
+            --text:         #1a1410;
+            --text-muted:   #7a7067;
+            --danger:       #ba1a1a;
+            --keypad-bg:    #e8e4de;
+            --keypad-border:#ccc7be;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); }
+        body { font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            height: 56px;
+            background: var(--surface);
+            border-bottom: 2px solid var(--border);
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.6rem;
+            letter-spacing: 0.12em;
+            color: var(--primary);
+        }
+
+        .header-nav { display: flex; gap: 0; }
+
+        .header-nav a, .header-nav button {
+            background: none;
+            border: none;
+            padding: 0 1rem;
+            height: 56px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.65rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            border-bottom: 3px solid transparent;
+            transition: color 0.15s, border-color 0.15s;
+        }
+
+        .header-nav a:hover, .header-nav button:hover { color: var(--text); }
+        .header-nav a.active, .header-nav button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .header-search input {
+            background: var(--keypad-bg);
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.9rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+            width: 200px;
+        }
+
+        .header-search input:focus { outline: 2px solid var(--primary); border-color: transparent; }
+        .header-search input::placeholder { color: var(--text-muted); }
+
+        .btn-totalizar {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1.8rem;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: filter 0.15s;
+        }
+        .btn-totalizar:hover { filter: brightness(1.15); }
+
+        main { display: flex; flex: 1; overflow: hidden; }
+
+        aside {
+            width: 400px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border-right: 2px solid var(--border);
+        }
+
+        .cart-scroll { flex: 1; overflow-y: auto; }
+
+        .cart-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+
+        .cart-table thead tr {
+            background: var(--surface-alt);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .cart-table th {
+            padding: 0.6rem 0.8rem;
+            font-size: 0.58rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            text-align: left;
+        }
+
+        .cart-table th:last-child,
+        .cart-table td:last-child { text-align: right; }
+
+        .cart-table td {
+            padding: 0.75rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cart-table tbody tr { transition: background 0.1s; cursor: pointer; }
+        .cart-table tbody tr:hover { background: var(--bg); }
+        .cart-table tbody tr.selected { background: color-mix(in srgb, var(--primary) 6%, transparent); }
+
+        .cart-table .col-qty  { width: 40px; }
+        .cart-table .col-name { font-weight: 700; }
+        .cart-table .col-price { white-space: nowrap; }
+        .cart-table .col-total { font-weight: 900; color: var(--primary); white-space: nowrap; }
+
+        .cart-delete {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0;
+            line-height: 1;
+            text-decoration: none;
+        }
+
+        .display-cantidad {
+            background: var(--text);
+            color: #fff;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.2rem;
+            letter-spacing: 0.08em;
+            text-align: center;
+            padding: 0.4rem 1rem;
+        }
+
+        .discount-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .discount-grid a {
+            background: var(--surface);
+            border: none;
+            padding: 0.45rem 0;
+            font-size: 0.62rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-align: center;
+            color: var(--text);
+            text-decoration: none;
+            transition: background 0.1s, color 0.1s;
+        }
+
+        .discount-grid a:hover { background: var(--primary); color: #fff; }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--keypad-border);
+            flex-shrink: 0;
+        }
+
+        .keypad button {
+            background: var(--keypad-bg);
+            border: none;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.6rem;
+            letter-spacing: 0.05em;
+            padding: 0.8rem;
+            cursor: pointer;
+            transition: background 0.1s, transform 0.05s;
+            color: var(--text);
+        }
+
+        .keypad button:hover  { background: var(--border); }
+        .keypad button:active { transform: scale(0.95); }
+
+        .keypad button.k-secondary { background: var(--secondary); color: #fff; font-size: 1rem; }
+        .keypad button.k-secondary:hover { filter: brightness(1.15); background: var(--secondary); }
+        .keypad button.k-danger    { background: var(--danger); color: #fff; font-size: 1.1rem; }
+        .keypad button.k-danger:hover { filter: brightness(1.1); background: var(--danger); }
+        .keypad button.k-primary   { background: var(--primary); color: #fff; font-size: 1.2rem; }
+        .keypad button.k-primary:hover { filter: brightness(1.1); background: var(--primary); }
+        .keypad button.k-span2     { grid-column: span 2; }
+
+        section.product-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg);
+        }
+
+        .cat-tabs {
+            display: flex;
+            background: var(--surface-alt);
+            border-bottom: 2px solid var(--border);
+            flex-shrink: 0;
+            overflow-x: auto;
+        }
+
+        .cat-tabs a {
+            padding: 0.75rem 1.4rem;
+            font-size: 0.62rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            text-decoration: none;
+            color: var(--text-muted);
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: color 0.15s, background 0.15s, border-color 0.15s;
+        }
+
+        .cat-tabs a:hover { background: var(--border); color: var(--text); }
+        .cat-tabs a.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: var(--surface);
+        }
+
+        .product-scroll { flex: 1; overflow-y: auto; padding: 1rem; }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .product-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text);
+            transition: box-shadow 0.15s, transform 0.1s, border-color 0.15s;
+        }
+
+        .product-card:hover {
+            box-shadow: 0 4px 16px rgba(141,0,10,0.12);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .product-card:active { transform: scale(0.97); }
+
+        .product-card-img {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .product-card-img img {
+            max-height: 80px;
+            width: 100%;
+            object-fit: contain;
+        }
+
+        .product-card-img .no-img {
+            font-size: 2.5rem;
+            color: var(--border);
+            font-family: 'Material Symbols Outlined';
+        }
+
+        .product-card-info {
+            padding: 0.5rem 0.6rem 0.6rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .product-card-cat {
+            font-size: 0.5rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.15rem;
+        }
+
+        .product-card-name {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            line-height: 1.2;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .product-card-price {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.04em;
+            color: var(--primary);
+            margin-top: 0.25rem;
+        }
+
+        footer {
+            height: 80px;
+            background: var(--surface-alt);
+            border-top: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-shrink: 0;
+        }
+
+        .footer-action {
+            background: none;
+            border: none;
+            padding: 0 1.2rem;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.55rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-decoration: none;
+            gap: 0.2rem;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .footer-action span.material-symbols-outlined { font-size: 1.4rem; }
+        .footer-action:hover { background: var(--border); color: var(--text); }
+
+        .total-block {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            height: 80px;
+        }
+
+        .total-label-area { padding: 0 1.5rem; text-align: right; }
+
+        .total-label {
+            font-size: 0.55rem;
+            font-weight: 900;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .total-amount {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.8rem;
+            letter-spacing: 0.02em;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .btn-cobrar {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            height: 80px;
+            padding: 0 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            gap: 0.15rem;
+            text-decoration: none;
+            transition: filter 0.15s;
+        }
+
+        .btn-cobrar:hover { filter: brightness(1.12); }
+        .btn-cobrar span.material-symbols-outlined { font-size: 2rem; font-variation-settings: 'FILL' 1; }
+        .btn-cobrar-label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+        }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); }
+
+        @@media (max-width: 900px) {
+            aside { width: 320px; }
+        }
+
+        /* ── MODAL APARCADOS ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal-aparcados {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            width: 480px;
+            max-width: 95vw;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8rem 1.2rem;
+            background: var(--surface-alt);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .modal-header h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3rem;
+            letter-spacing: 0.12em;
+            color: var(--primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            line-height: 1;
+        }
+        .modal-close:hover { color: var(--danger); }
+
+        .modal-body { overflow-y: auto; padding: 0.75rem; flex: 1; }
+
+        .aparcado-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            margin-bottom: 0.5rem;
+            background: var(--bg);
+            transition: border-color 0.15s;
+        }
+        .aparcado-card:hover { border-color: var(--primary); }
+
+        .aparcado-info { display: flex; flex-direction: column; gap: 0.15rem; }
+
+        .aparcado-num {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.08em;
+            color: var(--text);
+        }
+
+        .aparcado-hora {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .aparcado-total {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+            letter-spacing: 0.05em;
+        }
+
+        .btn-recuperar {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 0.45rem 1.1rem;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: filter 0.15s;
+        }
+        .btn-recuperar:hover { filter: brightness(1.15); color: #fff; }
+
+        .aparcados-badge {
+            background: var(--primary);
+            color: #fff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.6rem;
+            font-weight: 900;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+
+        .modal-empty {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<header>
+    <div style="display:flex; align-items:center; gap:2rem;">
+        <span class="brand">TPV</span>
+        <nav class="header-nav">
+            <button class="active" onclick="abrirModalAparcados()">
+                APARCAR
+                @if (ViewBag.PedidosAparcados != null && ((IEnumerable<tpv.Models.Pedido>)ViewBag.PedidosAparcados).Any())
+                {
+                    <span class="aparcados-badge">@((ViewBag.PedidosAparcados as IEnumerable<tpv.Models.Pedido>).Count())</span>
+                }
+            </button>
+        </nav>
+    </div>
+    <div style="display:flex; align-items:center; gap:0.75rem;" class="header-search">
+        <input type="text" placeholder="Buscar producto..." id="searchInput" oninput="filtrarProductos()" />
+        @* <button class="btn-totalizar">TOTALIZAR</button> *@
+    </div>
+</header>
+
+<main>
+
+    <aside>
+        <div class="display-cantidad" id="displayCantidad">1</div>
+
+        <div class="cart-scroll">
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th class="col-qty">UND</th>
+                        <th class="col-name">DESCRIPCIÓN</th>
+                        <th class="col-price">PRECIO</th>
+                        <th class="col-total">TOTAL</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="cartBody">
+                    @if (ViewBag.Lineas != null)
+                    {
+                        @foreach (var linea in ViewBag.Lineas)
+                        {
+                            <tr onclick="seleccionarLinea(this)">
+                                <td class="col-qty">@linea.Cantidad</td>
+                                <td class="col-name">@linea.Producto.Nombre</td>
+                                <td class="col-price">@linea.Producto.Precio.ToString("N2")€</td>
+                                <td class="col-total">@((linea.Producto.Precio * linea.Cantidad).ToString("N2"))€</td>
+                                <td>
+                                    <a asp-controller="Pedido" asp-action="EliminarLinea" asp-route-id="@linea.Id" class="cart-delete">✕</a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="discount-grid">
+            @foreach (var pct in new[] { 0, 5, 10, 15, 20, 25, 30, 35, 40, 50 })
+            {
+                <a asp-controller="Pedido" asp-action="AplicarDescuento" asp-route-descuento="@pct">@pct%</a>
+            }
+        </div>
+
+        <div class="keypad">
+            <button onclick="pulsarTecla('7')">7</button>
+            <button onclick="pulsarTecla('8')">8</button>
+            <button onclick="pulsarTecla('9')">9</button>
+            <button class="k-secondary" onclick="pulsarTecla('%')">%</button>
+
+            <button onclick="pulsarTecla('4')">4</button>
+            <button onclick="pulsarTecla('5')">5</button>
+            <button onclick="pulsarTecla('6')">6</button>
+            <button class="k-secondary" onclick="pulsarTecla('€')">€</button>
+
+            <button onclick="pulsarTecla('1')">1</button>
+            <button onclick="pulsarTecla('2')">2</button>
+            <button onclick="pulsarTecla('3')">3</button>
+            <button class="k-secondary" onclick="pulsarTecla(',')">‚</button>
+
+            <button class="k-danger" onclick="pulsarTecla('C')">C</button>
+            <button onclick="pulsarTecla('0')">0</button>
+            <button class="k-primary k-span2" onclick="aparcarCuenta()">APARCAR</button>
+        </div>
+    </aside>
+
+
+<!-- ── MODAL CUENTAS APARCADAS ── -->
+<div class="modal-overlay" id="modalAparcados">
+    <div class="modal-aparcados">
+        <div class="modal-header">
+            <h2>CUENTAS APARCADAS</h2>
+            <button class="modal-close" onclick="cerrarModalAparcados()">✕</button>
+        </div>
+        <div class="modal-body" id="listaAparcados">
+            @if (ViewBag.PedidosAparcados != null && ((IEnumerable<tpv.Models.Pedido>)ViewBag.PedidosAparcados).Any())
+            {
+                int numAparcado = 1;
+                @foreach (var p in (IEnumerable<tpv.Models.Pedido>)ViewBag.PedidosAparcados)
+                {
+                    <div class="aparcado-card">
+                        <div class="aparcado-info">
+                            <span class="aparcado-num">CUENTA @numAparcado</span>
+                            <span class="aparcado-hora">@p.Fecha.ToString("HH:mm") · #@p.Id</span>
+                        </div>
+                        <span class="aparcado-total">@p.Total.ToString("N2")€</span>
+                        <a href="@Url.Action("RecuperarPedido", "Pedido", new { id = p.Id })" class="btn-recuperar">RECUPERAR</a>
+                    </div>
+                    numAparcado++;
+                }
+            }
+            else
+            {
+                <p class="modal-empty">No hay cuentas aparcadas</p>
+            }
+        </div>
+    </div>
+</div>
+
+    <section class="product-panel">
+
+        <nav class="cat-tabs">
+            <a href="@Url.Action("Index")" class="@(ViewBag.CategoriaActual == null ? "active" : "")">TODOS</a>
+            @if (ViewBag.Categorias != null)
+            {
+                @foreach (var cat in ViewBag.Categorias)
+                {
+                    <a href="@Url.Action("Index", new { categoriaId = cat.Id })"
+                       class="@(ViewBag.CategoriaActual == cat.Id ? "active" : "")">
+                        @cat.Nombre.ToUpper()
+                    </a>
+                }
+            }
+        </nav>
+
+        <div class="product-scroll">
+            <div class="product-grid" id="productGrid">
+                @foreach (var item in Model)
+                {
+                    <a href="#" onclick="agregarProducto(@item.Id); return false;" class="product-card">
+                        <div class="product-card-img">
+                            @if (!string.IsNullOrEmpty(item.Imagen))
+                            {
+                                <img src="@item.Imagen" alt="@item.Nombre" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span class="no-img material-symbols-outlined">wine_bar</span>
+                            }
+                        </div>
+                        <div class="product-card-info">
+                            @if (item.Categoria != null)
+                            {
+                                <p class="product-card-cat">@item.Categoria.Nombre</p>
+                            }
+                            <p class="product-card-name">@item.Nombre</p>
+                            <p class="product-card-price">@item.Precio.ToString("N2")€</p>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+
+        <footer>
+            <a asp-controller="Pedido" asp-action="CancelarPedido" class="footer-action">
+                <span class="material-symbols-outlined">close</span>
+                CANCEL
+            </a>
+            @* <a asp-controller="Pedido" asp-action="VoidLinea" class="footer-action">
+                <span class="material-symbols-outlined">delete_forever</span>
+                VOID
+            </a> *@
+            <button class="footer-action" onclick="abrirCajon()">
+                <span class="material-symbols-outlined">payments</span>
+                CAJÓN
+            </button>
+
+            <div class="total-block">
+                <div class="total-label-area">
+                    <span class="total-label">TOTAL A PAGAR</span>
+                    <span class="total-amount">
+                        @if (ViewBag.Total != null)
+                        {
+                            @($"{ViewBag.Total:N2}€")
+                        }
+                        else
+                        {
+                            <text>0,00€</text>
+                        }
+                    </span>
+                </div>
+                <button class="btn-cobrar" onclick="cobrar()">
+                    <span class="material-symbols-outlined">payments</span>
+                    <span class="btn-cobrar-label">COBRAR</span>
+                </button>
+            </div>
+        </footer>
+
+    </section>
+</main>
+
+<script>
+    let cantidad = "";
+
+    function pulsarTecla(valor) {
+        if (valor === "C") {
+            cantidad = "";
+        } else if (valor === "OK" || valor === "%" || valor === "€" || valor === ",") {
+            // ampliar según necesidad
+        } else {
+            cantidad += valor;
+        }
+        document.getElementById("displayCantidad").innerText = cantidad || "1";
+    }
+
+    function getCantidad() {
+        return cantidad === "" ? 1 : parseInt(cantidad) || 1;
+    }
+
+    function resetCantidad() {
+        cantidad = "";
+        document.getElementById("displayCantidad").innerText = "1";
+    }
+
+    function agregarProducto(id) {
+        let cant = getCantidad();
+        window.location.href = `/Pedido/AgregarPedido?Id=${id}&cantidad=${cant}`;
+        resetCantidad();
+    }
+
+    function seleccionarLinea(row) {
+        document.querySelectorAll('#cartBody tr').forEach(r => r.classList.remove('selected'));
+        row.classList.add('selected');
+    }
+
+    function filtrarProductos() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        document.querySelectorAll('.product-card').forEach(card => {
+            const nombre = card.querySelector('.product-card-name')?.textContent.toLowerCase() ?? '';
+            card.style.display = nombre.includes(q) ? '' : 'none';
+        });
+    }
+
+    function abrirCajon() {
+        // ESTO SERVIRIA SI HUBIERA UN CAJON FISICO fetch('/Pedido/AbrirCajon').catch(() => {});
+        Swal.fire({ title: "CAJON ABIERTO!", icon: "success", draggable: true});
+    }
+
+    // ── APARCAR ──────────────────────────────────────────────────────────────
+    function aparcarCuenta() {
+        const tieneLineas = document.querySelectorAll('#cartBody tr').length > 0;
+        if (!tieneLineas) {
+            Swal.fire({ title: "Cuenta vacía", text: "No hay productos en la cuenta para aparcar.", icon: "warning" });
+            return;
+        }
+        Swal.fire({
+            title: "¿Aparcar esta cuenta?",
+            text: "Se guardará y podrás empezar una cuenta nueva.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#8d000a",
+            cancelButtonColor: "#7a7067",
+            confirmButtonText: "APARCAR",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "/Pedido/AparcarPedido";
+            }
+        });
+    }
+
+    // ── MODAL APARCADOS ──────────────────────────────────────────────────────
+    function abrirModalAparcados() {
+        document.getElementById("modalAparcados").classList.add("open");
+    }
+
+    function cerrarModalAparcados() {
+        document.getElementById("modalAparcados").classList.remove("open");
+    }
+
+    // Cerrar modal al hacer clic fuera
+    document.getElementById("modalAparcados").addEventListener("click", function(e) {
+        if (e.target === this) cerrarModalAparcados();
+    });
+
+    // ── COBRAR ───────────────────────────────────────────────────────────────
+    function cobrar() {
+        const tieneLineas = document.querySelectorAll('#cartBody tr').length > 0;
+        if (!tieneLineas) {
+            Swal.fire({ title: "Cuenta vacía", text: "No hay productos en la cuenta.", icon: "warning" });
+            return;
+        }
+        // Abrir ticket en ventana nueva y limpiar TPV
+        window.open('/Pedido/CerrarPedido', '_blank', 'width=420,height=700,scrollbars=yes');
+        // Recargar el TPV tras un pequeño delay para que la sesión se limpie
+        setTimeout(() => window.location.href = '/Producto/Index', 600);
+    }
+</script>
+
+</body>
+</html>

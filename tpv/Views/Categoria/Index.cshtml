@@ -1,0 +1,26 @@
+﻿@model IEnumerable<tpv.Models.Categoria>
+
+@{
+}
+
+<div class="p-4">
+    <h1>Categorias</h1>
+
+    <a asp-action="Create" class="btn btn-primary">Crear categoria</a>
+    <table class="table">
+        <tr>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Nombre</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </table>
+</div>
