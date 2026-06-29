@@ -6,10 +6,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Conexion a la base de datos
+// Conexion a la base de datos (PostgreSQL)
 builder.Services.AddDbContext<TpvContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
+    options.UseNpgsql(Environment.GetEnvironmentVariable("postgresql://postgres:mZyMWZKUhPwKBZhtAUwDqqVmzNgqShxg@postgres.railway.internal:5432/railway")
+        ?? builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddSession();
 
 var app = builder.Build();
